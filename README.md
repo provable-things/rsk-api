@@ -1,2 +1,3 @@
 # rsk-api
-Oraclize API for Rootstock smart contracts
+
+Please refer to [our API documentation](http://docs.oraclize.it/#rootstock) to know more about the Oraclize API on Rootstock.
