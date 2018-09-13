@@ -28,7 +28,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-pragma solidity >=0.4.1 <=0.4.20;// Incompatible compiler version... please select one stated within pragma solidity or use different oraclizeAPI version
+pragma solidity >=0.4.1;// Incompatible compiler version... please select one stated within pragma solidity or use different oraclizeAPI version
 
 contract OraclizeI {
     address public cbAddress;
@@ -85,13 +85,15 @@ library Buffer {
         uint capacity;
     }
 
-    function init(buffer memory buf, uint capacity) internal constant {
+    function init(buffer memory buf, uint _capacity) internal constant {
+        uint capacity = _capacity;
         if(capacity % 32 != 0) capacity += 32 - (capacity % 32);
         // Allocate space for the buffer data
         buf.capacity = capacity;
         assembly {
             let ptr := mload(0x40)
             mstore(buf, ptr)
+            mstore(ptr, 0)
             mstore(0x40, add(ptr, capacity))
         }
     }
@@ -110,7 +112,7 @@ library Buffer {
     }
 
     /**
-     * @dev Appends a byte array to the end of the buffer. Reverts if doing so
+     * @dev Appends a byte array to the end of the buffer. Resizes if doing so
      *      would exceed the capacity of the buffer.
      * @param buf The buffer to append to.
      * @param data The data to append.
@@ -157,7 +159,7 @@ library Buffer {
     }
 
     /**
-     * @dev Appends a byte to the end of the buffer. Reverts if doing so would
+     * @dev Appends a byte to the end of the buffer. Resizes if doing so would
      * exceed the capacity of the buffer.
      * @param buf The buffer to append to.
      * @param data The data to append.
@@ -182,7 +184,7 @@ library Buffer {
     }
 
     /**
-     * @dev Appends a byte to the end of the buffer. Reverts if doing so would
+     * @dev Appends a byte to the end of the buffer. Resizes if doing so would
      * exceed the capacity of the buffer.
      * @param buf The buffer to append to.
      * @param data The data to append.
@@ -291,8 +293,8 @@ contract usingOraclize {
     uint constant month = 60*60*24*30;
     byte constant proofType_NONE = 0x00;
     byte constant proofType_TLSNotary = 0x10;
-    byte constant proofType_Android = 0x20;
     byte constant proofType_Ledger = 0x30;
+    byte constant proofType_Android = 0x40;
     byte constant proofType_Native = 0xF0;
     byte constant proofStorage_IPFS = 0x01;
     uint8 constant networkID_auto = 0;
@@ -332,10 +334,6 @@ contract usingOraclize {
         }
         if (getCodeSize(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475)>0){ //ethereum-bridge
             OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
-            return true;
-        }
-        if (getCodeSize(0x20e12A1F859B3FeaE5Fb2A0A32C18F5a65555bBF)>0){ //ether.camp ide
-            OAR = OraclizeAddrResolverI(0x20e12A1F859B3FeaE5Fb2A0A32C18F5a65555bBF);
             return true;
         }
         if (getCodeSize(0x51efaF4c8B3C9AfBD5aB9F4bbC82784Ab6ef8fAA)>0){ //browser-solidity
@@ -896,6 +894,7 @@ contract usingOraclize {
 
     using CBOR for Buffer.buffer;
     function stra2cbor(string[] arr) internal constant returns (bytes) {
+        safeMemoryCleaner();
         Buffer.buffer memory buf;
         Buffer.init(buf, 1024);
         buf.startArray();
@@ -907,6 +906,7 @@ contract usingOraclize {
     }
 
     function ba2cbor(bytes[] arr) internal constant returns (bytes) {
+        safeMemoryCleaner();
         Buffer.buffer memory buf;
         Buffer.init(buf, 1024);
         buf.startArray();
@@ -937,6 +937,9 @@ contract usingOraclize {
         bytes32 sessionKeyHash_bytes32 = oraclize_randomDS_getSessionPubKeyHash();
         assembly {
             mstore(unonce, 0x20)
+            // the following variables can be relaxed
+            // check relaxed random contract under ethereum-examples repo
+            // for an idea on how to override and replace comit hash vars
             mstore(add(unonce, 0x20), xor(blockhash(sub(number, 1)), xor(coinbase, timestamp)))
             mstore(sessionKeyHash, 0x20)
             mstore(add(sessionKeyHash, 0x20), sessionKeyHash_bytes32)
@@ -1211,5 +1214,11 @@ contract usingOraclize {
         return safer_ecrecover(hash, v, r, s);
     }
 
+    function safeMemoryCleaner() internal constant {
+        assembly {
+            let fmem := mload(0x40)
+            codecopy(fmem, codesize, sub(msize, fmem))
+        }
+    }
 }
 // </ORACLIZE_API>
