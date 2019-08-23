@@ -327,8 +327,8 @@ contract usingOraclize {
             oraclize_setNetworkName("rsk_mainnet");
             return true;
         }
-        if (getCodeSize(0xb08fcd76ce7Ddd058b2A1857038794015178e140)>0){ //rsk testnet
-            OAR = OraclizeAddrResolverI(0xb08fcd76ce7Ddd058b2A1857038794015178e140);
+        if (getCodeSize(0x77AF3146DaAa33e9F4610A7057d489DC27f025aD)>0){ //rsk testnet
+            OAR = OraclizeAddrResolverI(0x77AF3146DaAa33e9F4610A7057d489DC27f025aD);
             oraclize_setNetworkName("rsk_testnet");
             return true;
         }
