@@ -322,8 +322,8 @@ contract usingOraclize {
     }
 
     function oraclize_setNetwork(uint8 networkID) internal returns(bool){
-        if (getCodeSize(0xc78250621ca75Ed4FB6921dC573eCf27A355B745)>0){ //rsk mainnet
-            OAR = OraclizeAddrResolverI(0xc78250621ca75Ed4FB6921dC573eCf27A355B745);
+        if (getCodeSize(0xC63A9D291B9496638bCa8550c34CBA82B3d94aE4)>0){ //rsk mainnet
+            OAR = OraclizeAddrResolverI(0xC63A9D291B9496638bCa8550c34CBA82B3d94aE4);
             oraclize_setNetworkName("rsk_mainnet");
             return true;
         }
